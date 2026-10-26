@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerClimbing1 : MonoBehaviour
+{
+    [SerializeField] private float speed = 5f;
+    Rigidbody rb;
+
+    // State variable to track if the player is attached to the wall
+    private bool isAttached = true;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;
+    }
+
+    void Update()
+    {
+        // Capture input in Update so frame drops don't miss the button press
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            // Toggle the attachment state
+            isAttached = !isAttached;
+
+            // Optional: Re-enable gravity if detached, or keep it off depending on your game's physics
+            rb.useGravity = !isAttached;
+        }
+    }
+
+    void FixedUpdate()
+    {
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+        Vector2 input = SquareToCircle(new Vector2(h, v));
+
+        // Only search for and stick to the wall if the player is attached
+        if (isAttached)
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, transform.forward, out hit))
+            {
+                transform.forward = -hit.normal;
+                rb.position = Vector3.Lerp(rb.position, hit.point + hit.normal * 0.51f, 10f * Time.fixedDeltaTime);
+            }
+
+            // Move relative to the wall face
+            rb.linearVelocity = transform.TransformDirection(input) * speed;
+        }
+        else
+        {
+            // Detached behavior: standard 3D or 2D movement when free-falling/moving away
+            // Currently set to move relative to world coordinates, but you can adjust this to your needs
+            Vector3 moveDirection = new Vector3(input.x, 0, input.y);
+            rb.linearVelocity = moveDirection * speed;
+        }
+    }
+
+    Vector2 SquareToCircle(Vector2 input)
+    {
+        return (input.sqrMagnitude >= 1f) ? input.normalized : input;
+    }
+}
