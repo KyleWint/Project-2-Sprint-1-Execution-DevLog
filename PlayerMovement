@@ -1,0 +1,47 @@
+using UnityEngine;
+
+public class PlayerMovement : MonoBehaviour
+{
+    public float moveSpeed = 5f;
+    private Rigidbody rb;
+    private bool isGrounded;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    void Update()
+    {
+        // Get input from keyboard (WASD or Arrow Keys)
+        float moveX = Input.GetAxis("Horizontal");
+        float moveZ = Input.GetAxis("Vertical");
+
+        // Calculate movement direction relative to the player's position
+        Vector3 move = new Vector3(moveX, 0f, moveZ).normalized;
+
+        // Apply movement only if the player is grounded
+        if (isGrounded)
+        {
+            Vector3 targetPosition = rb.position + move * moveSpeed * Time.deltaTime;
+            rb.MovePosition(targetPosition);
+        }
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        // Check if the player is touching an object tagged as "Ground"
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
+        }
+    }
+}
